@@ -2,7 +2,7 @@ import java.io.*;
 import java.math.BigDecimal;
 import java.math.MathContext;
 
-public class Nepomuceno_Karl_MidtermReq {
+public class NepomucenoKarlMidtermReq {
 
     public static void main(String[] args) {
         // Path to the input file
