@@ -4,91 +4,71 @@ import java.math.MathContext;
 
 public class NepomucenoKarlMidtermReq {
 
+    private static final String FILE_NAME = "input.txt"; // Constant for file name
+    private static final MathContext MATH_CONTEXT = new MathContext(30); // Constant for MathContext precision
+    private static final BigDecimal SMALL_VALUE = new BigDecimal("1E-20"); // Constant for small value threshold
+
     public static void main(String[] args) {
-        // Path to the input file
-        String fileName = "input.txt";
-        File file = new File(fileName);
+        File file = new File(FILE_NAME);
         
         // Check if the file exists
         if (!file.exists()) {
-            System.out.println("File does not exist: " + file.getAbsolutePath());
+            System.err.println("File does not exist: " + file.getAbsolutePath()); // Print error message to standard error
             return;
         }
         
-        // Try to read the text file
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(file));
+        // Try to read the text file using try-with-resources for automatic resource management
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) { // Try-with-resources to ensure resource is closed
             String line;
-            
+
             // Check if the reader is ready to read
             if (!reader.ready()) {
-                System.out.println("No data to read in the file.");
+                System.out.println("No data to read in the file."); // Print warning message to standard output
             }
             
             // Read each line of the file
             while ((line = reader.readLine()) != null) {
                 try {
                     // Parse the line into a BigDecimal
-                    BigDecimal x = new BigDecimal(line.trim());
+                    BigDecimal x = new BigDecimal(line.trim()); // Trim whitespace and parse to BigDecimal
                     
                     // Calculate the hyperbolic sine of x
-                    BigDecimal sinhX = sinh(x, new MathContext(30));
+                    BigDecimal sinhX = sinh(x, MATH_CONTEXT); // Use constant MathContext
                     
                     // Print the result
-                    System.out.println("sinh(" + x + ") = " + sinhX);
+                    System.out.println("sinh(" + x + ") = " + sinhX); // Print result in a readable format
                 } catch (NumberFormatException nfe) {
                     // Handle invalid number format in the line
-                    System.err.println("Invalid number format in line: " + line);
+                    System.err.println("Invalid number format in line: " + line); // Print error message to standard error
                 }
             }
-            
-            // Close the reader
-            reader.close();
         } catch (FileNotFoundException e) {
-            // Handle the case where the file is not found
-            System.err.println("File not found: " + fileName);
+            System.err.println("File not found: " + FILE_NAME); // Print error message to standard error
         } catch (IOException e) {
-            // Handle errors while reading from the file
-            System.err.println("Error reading from file.");
-            e.printStackTrace();
+            System.err.println("Error reading from file."); // Print error message to standard error
+            e.printStackTrace(); // Print stack trace for debugging purposes
         }
     }
 
     // Calculate sinh(x) using Taylor series expansion
     public static BigDecimal sinh(BigDecimal x, MathContext mc) {
-        // Set a small value threshold for terminating the series expansion
-        final BigDecimal smallValue = new BigDecimal("1E-20");
-        
-        // Initialize result and the first term of the series
         BigDecimal result = BigDecimal.ZERO;
         BigDecimal term = x;
-        
-        // Precompute x^2 to use in series terms
-        BigDecimal xSquared = x.multiply(x, mc);
-        
-        // Initialize factorial and numerator
+        BigDecimal xSquared = x.multiply(x, mc); // Cache x^2 for efficiency
         BigDecimal factorial = BigDecimal.ONE;
         BigDecimal num = x;
-
-        // Variable to keep track of the series iteration
         int i = 1;
-        
+
         // Loop until the term is smaller than the small value threshold
-        while (term.abs(mc).compareTo(smallValue) > 0) {
-            // Add the current term to the result
+        while (term.abs(mc).compareTo(SMALL_VALUE) > 0) { // Use constant small value threshold
             result = result.add(term, mc);
-            
-            // Compute the next term in the series
-            num = num.multiply(xSquared, mc); // x^(2*i + 1)
+            num = num.multiply(xSquared, mc); // x^(2*i + 1) term computation
             factorial = factorial.multiply(BigDecimal.valueOf(2 * i))
-                    .multiply(BigDecimal.valueOf(2 * i + 1));
-            term = num.divide(factorial, mc);
-            
-            // Increment the iteration count
-            i++;
+                                 .multiply(BigDecimal.valueOf(2 * i + 1)); // Factorial computation
+            term = num.divide(factorial, mc); // Division for next term in series
+            i++; // Increment iteration count
         }
-        
-        // Return the final result of the series expansion
+
         return result;
     }
 }
